@@ -50,6 +50,9 @@
 #include <cstdlib>
 #include <unordered_set>
 #include <algorithm>
+
+#define PI 3.14159265
+
 //== IMPLEMENTATION ==========================================================
 template <typename Elem>
 class randomaccesstable
@@ -667,11 +670,14 @@ static bool sample_valid(const Vector3d &p,const std::vector<int>& ids,const std
     }
     return true;
 }
+
+
 //=============================================================================
 /// subsample points
 std::vector<int> RegistrationViewer::subsample( const std::vector< Vector3d > & _pts )
 {
     std::vector<int> indeces;
+    std::vector<Vector3d> pts_chosen;
 
     float subsampleRadius = 5 * averageVertexDistance_;
 
@@ -682,6 +688,31 @@ std::vector<int> RegistrationViewer::subsample( const std::vector< Vector3d > & 
     //  vector _pts are also often close in the scan )
     ////////////////////////////////////////////////////////////////////////////
 
+    // TODO: i may be 1 larger than the largest size?
+
+    // set up the first one in all vertices
+    int i = 0;
+    indeces.push_back(i);
+    pts_chosen.push_back(_pts[i]);
+
+    // iterate through all vertices and find the subsampled points
+    for (auto iter = _pts.begin(); iter != _pts.end(); iter++, i++)
+    {
+        bool inside_range = false;
+        printf("You're processing point index %d\n", i);
+        for (auto iter_chosen = pts_chosen.begin(); iter_chosen != pts_chosen.end(); iter_chosen++)
+        {
+            if (length(*iter - *iter_chosen) < subsampleRadius)
+                inside_range = true;
+        }
+        if (inside_range == false)
+        {
+            indeces.push_back(i);
+            pts_chosen.push_back(_pts[i]);
+        }
+    }
+
+    
     ////////////////////////////////////////////////////////////////////////////
 
     // keep indeces/samples for display
@@ -758,7 +789,7 @@ void RegistrationViewer::calculate_correspondences(
         }
     }
 
-    printf("calculate_correspondences: candidate num: %d\n",srcCandidatePts.size());
+    printf("calculate_correspondences: candidate num before pruning: %d\n",srcCandidatePts.size());
 
     // EXERCISE 2.3 /////////////////////////////////////////////////////////////
     // correspondence pruning:
@@ -774,6 +805,47 @@ void RegistrationViewer::calculate_correspondences(
     float distMedianThresh = 3;
 
     ////////////////////////////////////////////////////////////////////////////
+
+    // we use a tombstone method for pruning
+    int size = srcCandidateNormals.size();
+    double tombstone = 0.0;
+
+    // mark the places of not matched ones
+    for (int index = 0; index < size; index++)
+    {
+        // calculate the long edge of the triangle
+        Vector3d long_edge = srcCandidateNormals[index].normalize() - targetCandidateNormals[index].normalize();
+        double length_long_edge = length(long_edge);
+
+        // compute the normal vector compatibility and distance thresh
+        if (src_target_dis2[index] > distMedianThresh ||
+            2 * asin(length_long_edge/2) * 180 / PI > normalCompatabilityThresh)
+                src_target_dis2[index] = tombstone;
+    }
+
+    // delete those ones with tombstones
+    int counter = 0;
+    for (auto iter = src_target_dis2.begin(); iter != src_target_dis2.end(); /*DO NOTHING HERE*/)
+    {
+        if (*iter == tombstone)
+        {
+            srcCandidatePts.erase(srcCandidatePts.begin() + counter);
+            srcCandidateNormals.erase(srcCandidateNormals.begin() + counter);
+            targetCandidatePts.erase(targetCandidatePts.begin() + counter);
+            targetCandidateNormals.erase(targetCandidateNormals.begin() + counter);
+            iter = src_target_dis2.erase(src_target_dis2.begin() + counter);
+        }
+        else 
+        {
+            iter++;
+            counter++;
+        }
+    }
+
+    _src = srcCandidatePts;
+    _target = targetCandidatePts;
+    _target_normals = targetCandidateNormals;
+
     ////////////////////////////////////////////////////////////////////////////
 
 }
