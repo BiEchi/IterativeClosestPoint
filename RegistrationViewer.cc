@@ -695,8 +695,11 @@ std::vector<int> RegistrationViewer::subsample( const std::vector< Vector3d > & 
     indeces.push_back(i);
     pts_chosen.push_back(_pts[i]);
 
+    // iteration step. for testing use 4, for final examination use 1 or 2
+    int step = 4;
+
     // iterate through all vertices and find the subsampled points
-    for (auto iter = _pts.begin(); iter != _pts.end(); iter++, i++)
+    for (auto iter = _pts.begin(); iter != _pts.end(); iter+=step, i+=step)
     {
         bool inside_range = false;
         printf("You're processing point index %d\n", i);
