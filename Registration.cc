@@ -64,14 +64,20 @@ Transformation Registration::register_point2point(
         // EXERCISE 2.4 /////////////////////////////////////////////////////////////
         // point-2-point constraints
         // set up matrix A and b with the linear constraints
-
+        
         ////////////////////////////////////////////////////////////////////////////
+        for (int j = 0; j < 6; j++)
+        {
+            A[6 * i + j] = 1;
+        }
+
+        b[i] = 1;
 
         ////////////////////////////////////////////////////////////////////////////
 
     }
 
-    // solve overdetermined Ax=b
+    // solve overdetermined Ax=b, where x = [alpha, beta, gama, t_x, t_y, t_z]^T
     double x[6];
 
     Transformation tr;
@@ -122,6 +128,8 @@ Transformation Registration::register_point2surface(
 
         ////////////////////////////////////////////////////////////////////////////
         
+
+
         ////////////////////////////////////////////////////////////////////////////
     }
 
