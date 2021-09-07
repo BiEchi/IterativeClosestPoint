@@ -688,22 +688,35 @@ std::vector<int> RegistrationViewer::subsample( const std::vector< Vector3d > & 
     //  vector _pts are also often close in the scan )
     ////////////////////////////////////////////////////////////////////////////
 
-    // TODO: i may be 1 larger than the largest size?
-
     // set up the first one in all vertices
     int i = 0;
     indeces.push_back(i);
     pts_chosen.push_back(_pts[i]);
 
+    // find the smallest amount of vertices for all input meshes
+    int n_vertices_smallest = meshes_[0].n_vertices();
+    for (int k = 0; k < meshes_.size(); k++)
+    {
+        if (meshes_[k].n_vertices() < n_vertices_smallest)
+            n_vertices_smallest = meshes_[k].n_vertices();
+    }
+
     // iteration step. for testing use 4, for final examination use 1 or 2
     int step = 4;
 
     // iterate through all vertices and find the subsampled points
-    for (auto iter = _pts.begin(); iter != _pts.end(); iter+=step, i+=step)
+    for (auto iter = _pts.begin(); iter != _pts.end(), i < n_vertices_smallest - step; iter+=step, i+=step)
     {
         bool inside_range = false;
         printf("You're processing point index %d\n", i);
-        for (auto iter_chosen = pts_chosen.begin(); iter_chosen != pts_chosen.end(); iter_chosen++)
+
+        // optimized: too early vertices will not be needed to examine (using sliding-window approach)
+        int window_size = 40;
+        auto window_starter = pts_chosen.size() < window_size ?
+            pts_chosen.begin() : pts_chosen.begin() + pts_chosen.size() - window_size;
+        
+        // iterate through to gain the subsampled vertices
+        for (auto iter_chosen = window_starter; iter_chosen != pts_chosen.end(); iter_chosen++)
         {
             if (length(*iter - *iter_chosen) < subsampleRadius)
                 inside_range = true;
@@ -715,7 +728,6 @@ std::vector<int> RegistrationViewer::subsample( const std::vector< Vector3d > & 
         }
     }
 
-    
     ////////////////////////////////////////////////////////////////////////////
 
     // keep indeces/samples for display
@@ -792,7 +804,7 @@ void RegistrationViewer::calculate_correspondences(
         }
     }
 
-    printf("calculate_correspondences: candidate num before pruning: %d\n",srcCandidatePts.size());
+    printf("calculate_correspondences: candidate num: %d\n",srcCandidatePts.size());
 
     // EXERCISE 2.3 /////////////////////////////////////////////////////////////
     // correspondence pruning:
