@@ -1,2 +1,3 @@
 # IterativeClosestPoint
-This is the public repo for implementing the iterative closest point algorithm.
+This is the public repo for implementing the iterative closest point algorithm. If you want to access the paper, please E-mail at the correspondent of this research at [my E-mail](Haob.19@intl.zju.edu.cn) to access the password for the essay repository at [the OneDrive website](https://zjuintl-my.sharepoint.com/:b:/r/personal/haob_19_intl_zju_edu_cn/Documents/Essays/A%20SLAM-oriented%20Taxonomy%20of%20ICP%20And%20Their%20Applications.pdf?csf=1&web=1&e=gwH9s4). If you want to reproduce this object, please follow the instructions in [the instruction directory](./Instructions).
+
